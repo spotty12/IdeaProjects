@@ -8,7 +8,7 @@ public class Practical_VI_Q1 {
 		  //Input
 		  Scanner input = new Scanner(System.in);
 		  try {
-			  System.out.print("Please enter a file name: ");
+			  System.out.print("Please enter a file name (eg. graph1.txt): ");
 			  String fileName = input.nextLine();
 			  File file = new File("Q1/" + fileName);
 			  input = new Scanner(file);
