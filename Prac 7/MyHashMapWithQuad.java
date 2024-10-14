@@ -1,3 +1,6 @@
+import java.util.HashSet;
+import java.util.Set;
+
 //Total 50 marks
 public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
     // Define the default hash table size.
@@ -19,6 +22,7 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
     private int size = 0;
 
     // add your variable for your hashing table
+    Entry<K, V>[] table;
 
     /** Construct a map with the default capacity and load factor */
     public MyHashMapWithQuad() {
@@ -41,6 +45,7 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
 
         this.loadFactorThreshold = loadFactorThreshold;
         //add a line of code for your hashing table                                 // 1 marks
+        table = new Entry[capacity];
     }
 
     /** Remove all the entries from this map */
@@ -59,36 +64,67 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
 
     /** Return true if this map contains the specified value */
     public boolean containsValue(V value) {                            // 4 marks
-    
 		//add your code here
-
+        for (int i = 0; i < capacity; i++) {
+            if (table[i] != null){
+                if (table[i].getValue().equals(value)){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
     /** Return a set of entries in the map */
-    public java.util.Set<MyMap.Entry<K,V>> entrySet() {// 3 marks
-        java.util.Set<MyMap.Entry<K, V>> set = new java.util.HashSet<MyMap.Entry<K, V>>();
+    public Set<Entry<K,V>> entrySet() {// 3 marks
+        Set<Entry<K, V>> set = new HashSet<>();
                                           
-            // add your code here
-
+        // add your code here
+        for (int i = 0; i < capacity; i++) {
+            //Adds all elements in table into set
+            if (table[i] != null){
+                set.add(table[i]);
+            }
+        }
         return set;
     }
 
     /** Return the first value that matches the specified key */
     public V get(K key) {                                                   // 10 marks
         // Perform quadratic probing
-		
-		//add your code here
+        //add your code here
+
+        //j used to determine number of collisions
+        for (int j = 0; j < capacity; j++) {
+            //Quadratic probing
+            int index = hash(key.hashCode() + (int) Math.pow(j, 2));
+            if (table[index] != null){
+                //First value that matches key is returned
+                if (table[index].getKey().equals(key)){
+                    return table[index].getValue();
+                }
+            } else {
+                //Exit loop if index value is null
+                break;
+            }
+        }
 
         return null;
     }
 
     /** Return all values for the specified key in this map */
-    public java.util.Set<V> getAll(K key) {                              // 4 marks
-        java.util.Set<V> set = new java.util.HashSet<V>();
+    public Set<V> getAll(K key) {                              // 4 marks
+        Set<V> set = new HashSet<V>();
 
 		// add your cide here
-
+        for (int i = 0; i < capacity; i++) {
+            if (table[i] != null){
+                if (table[i].getKey().equals(key)){
+                    //Set of all values for specific key
+                    set.add(table[i].getValue());
+                }
+            }
+        }
         return set;
     }
 
@@ -98,27 +134,74 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
     }
 
     /** Return a set consisting of the keys in this map */
-    public java.util.Set<K> keySet() {                                  // 3 marks
-        java.util.Set<K> set = new java.util.HashSet<K>();
+    public Set<K> keySet() {                                  // 3 marks
+        Set<K> set = new HashSet<K>();
 
 		//add your code here
-
+        for (int i = 0; i < capacity; i++) {
+            if (table[i] != null){
+                //Set of all keys in map
+                set.add(table[i].getKey());
+            }
+        }
         return set;
     }
 
     /** Add an entry (key, value) into the map */
     public V put(K key, V value) {                                      //10 marks
-		
 		//add your code here
-		
+        //Initialise index
+		int index = 0;
+
+        //Perform quadratic probing
+        for (int j = 0; j < capacity; j++) {
+            index = hash(key.hashCode() + (int) Math.pow(j, 2)); //Quad probing
+            if (table[index] != null){ //The key already in map
+                //Replace old value with new value
+                if (table[index].getKey().equals(key)){
+                    V oldValue = table[index].getValue();
+                    table[index].value = value;
+                    return oldValue;
+                }
+            } else {
+                //Exit loop if index value is null
+                break;
+            }
+        }
+
+        //Check load factor
+        if (size >= capacity * loadFactorThreshold) {
+            if (capacity == MAXIMUM_CAPACITY) {
+                throw new RuntimeException("Maximum capacity exceeded");
+            }
+
+            rehash();
+        }
+
+        //Add new value to map
+        table[index] = new Entry<>(key, value);
+        size++;
         return value;
     }
 
     /** Remove the element for the specified key */
     public void remove(K key) {                                             // 10 marks
-		
 		//add your code here
-		
+        //Perform quadratic probing
+        for (int j = 0; j < capacity; j++) {
+            int index = hash(key.hashCode() + (int) Math.pow(j, 2)); //Quad probing
+            if (table[index] != null){
+                //Remove value when key matches
+                if (table[index].getKey().equals(key)){
+                    table[index] = null;
+                    size--; //Decrease size
+                    break;
+                }
+            } else {
+                //Exit loop when index value is null
+                break;
+            }
+        }
     }
 
     /** Return the number of mappings in this map */
@@ -127,11 +210,16 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
     }
 
     /** Return a set consisting of the values in this map */
-    public java.util.Set<V> values() {                                          // 3 marks
-        java.util.Set<V> set = new java.util.HashSet<V>();
+    public Set<V> values() {                                          // 3 marks
+        Set<V> set = new HashSet<V>();
 
 		//add your code
-
+        for (int i = 0; i < capacity; i++) {
+            if (table[i] != null){
+                //Set of all values in map
+                set.add(table[i].getValue());
+            }
+        }
         return set;
     }
 
@@ -158,14 +246,14 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
 
     /** Remove all entries from each bucket */
     private void removeEntries() {                                              // 2 marks
-		
 		//add your code here. this should run in O(1)
-		
+        //Creates a table with same capacity, lose reference to old table
+		table = new Entry[capacity];
     }
 
     /** Rehash the map */
     private void rehash() {
-        java.util.Set<Entry<K, V>> set = entrySet(); // Get entries
+        Set<Entry<K, V>> set = entrySet(); // Get entries
         capacity <<= 1; // Double capacity
         table = new Entry[capacity]; // Create a new hash table
         size = 0; // Clear size
