@@ -97,7 +97,7 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
         //j used to determine number of collisions
         for (int j = 0; j < capacity; j++) {
             //Quadratic probing
-            int index = hash(key.hashCode() + (int) Math.pow(j, 2));
+            int index = hash(key.hashCode() + (j * j));
             if (table[index] != null){
                 //First value that matches key is returned
                 if (table[index].getKey().equals(key)){
@@ -108,7 +108,6 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
                 break;
             }
         }
-
         return null;
     }
 
@@ -153,19 +152,18 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
         //Initialise index
 		int index = 0;
 
-        //Perform quadratic probing
-        for (int j = 0; j < capacity; j++) {
-            index = hash(key.hashCode() + (int) Math.pow(j, 2)); //Quad probing
-            if (table[index] != null){ //The key already in map
-                //Replace old value with new value
-                if (table[index].getKey().equals(key)){
-                    V oldValue = table[index].getValue();
-                    table[index].value = value;
-                    return oldValue;
+        //The key already in map
+        if (get(key) != null){
+            for (int j = 0; j < capacity; j++) {
+                index = hash(key.hashCode() + (j * j)); //Quad probing
+                if (table[index] != null){
+                    //Replace old value with new value
+                    if (table[index].getKey().equals(key)){
+                        V oldValue = table[index].getValue();
+                        table[index].value = value;
+                        return oldValue;
+                    }
                 }
-            } else {
-                //Exit loop if index value is null
-                break;
             }
         }
 
@@ -174,8 +172,15 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
             if (capacity == MAXIMUM_CAPACITY) {
                 throw new RuntimeException("Maximum capacity exceeded");
             }
-
             rehash();
+        }
+
+        //Perform quadratic probing
+        for (int j = 0; j < capacity; j++) {
+            index = hash(key.hashCode() + (j * j)); //Quad probing
+            if (table[index] == null){
+                break;
+            }
         }
 
         //Add new value to map
@@ -189,7 +194,7 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
 		//add your code here
         //Perform quadratic probing
         for (int j = 0; j < capacity; j++) {
-            int index = hash(key.hashCode() + (int) Math.pow(j, 2)); //Quad probing
+            int index = hash(key.hashCode() + (j * j)); //Quad probing
             if (table[index] != null){
                 //Remove value when key matches
                 if (table[index].getKey().equals(key)){
@@ -225,8 +230,8 @@ public class MyHashMapWithQuad<K, V> implements MyMap<K, V>{
 
     /** Hash function */
     private int hash(int hashCode) {
-       // return hashCode % capacity;
-      return supplementalHash(hashCode) & (capacity - 1);
+        // return hashCode % capacity;
+        return supplementalHash(hashCode) & (capacity - 1);
     }
 
     /** Ensure the hashing is evenly distributed */
